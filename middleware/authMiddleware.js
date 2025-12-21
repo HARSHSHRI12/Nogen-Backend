@@ -1,42 +1,57 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-
-module.exports = async (req, res, next) => {
-  // Get token from the Authorization header
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  
-  // Check if token is provided
-  if (!token) {
-    return res.status(401).json({ success: false, error: 'No token provided' });
-  }
-
+const authMiddleware = async (req, res, next) => {
   try {
-    // Verify the JWT token using the secret
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let token = null;
 
-    // Fetch user by decoded id, exclude password from the response
-    const user = await User.findById(decoded.id).select('-password');
-    
-    // If user is not found, token is invalid
+    // 1️ Get token from cookie (primary)
+    if (req.cookies && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
+    }
+
+    // 2️ Fallback: Authorization header
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    // 3️ No token
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized – token missing",
+      });
+    }
+
+    // 4️ Verify access token
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+
+    // 5️ Fetch user
+    const user = await User.findById(decoded.id);
     if (!user) {
-      return res.status(401).json({ success: false, error: 'Invalid token or user not found' });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized – user not found",
+      });
     }
 
-    // Attach the user object to the request object for future use in the route handler
+    // 6️ Attach user
     req.user = user;
-    
-    // Continue with the next middleware or route handler
     next();
-  } catch (err) {
-    console.error('JWT verification error:', err);  // Log error for debugging
-    
-    // If token is expired or invalid, send error response
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ success: false, error: 'Token expired, please login again' });
+
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Session expired, please login again",
+      });
     }
-    
-    // General error for invalid or unauthorized token
-    return res.status(401).json({ success: false, error: 'Unauthorized, invalid token' });
+
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
   }
 };
+
+module.exports = authMiddleware;

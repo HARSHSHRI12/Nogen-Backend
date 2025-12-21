@@ -24,7 +24,7 @@ router.post('/login', [
 // @route   GET /api/auth/user
 // @desc    Get user data
 // @access  Private
-router.get('/user', authMiddleware, authController.getUser);
+router.get('/user', authMiddleware, authController.getMe);
 
 // @route   POST /api/auth/forgot-password
 // @desc    Forgot password

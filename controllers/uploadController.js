@@ -1,3 +1,5 @@
+const Profile = require('../models/Profile');
+
 // controllers/uploadController.js
 
 // Syllabus Upload
@@ -54,11 +56,41 @@ const uploadSyllabus = (req, res) => {
       res.status(500).json({ message: 'Server error', error });
     }
   };
+
+  // Upload Profile Picture
+  const uploadProfilePic = async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: 'No file uploaded.' });
+      }
+
+      // Construct the URL of the uploaded file
+      const profilePicUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+
+      // Find the user's profile and update the profilePic field
+      const profile = await Profile.findOneAndUpdate(
+        { user: req.user._id },
+        { $set: { profilePic: profilePicUrl } },
+        { new: true }
+      ).populate('user', ['role']);
+
+      if (!profile) {
+        return res.status(404).json({ success: false, error: 'Profile not found.' });
+      }
+
+      res.json(profile);
+
+    } catch (err) {
+      console.error('Profile pic upload error:', err);
+      res.status(500).send('Server Error');
+    }
+  };
   
   module.exports = {
     uploadSyllabus,
     uploadMaterials,
     createAssignment,
     updateAssignment,
+    uploadProfilePic,
   };
   
