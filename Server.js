@@ -39,7 +39,7 @@ const allowedOrigins = [
   "http://localhost:3000", // Always allow localhost:3000 for local development
   process.env.CLIENT_URL, // Netlify frontend URL (e.g., https://your-netlify-app.netlify.app)
   process.env.BACKEND_URL // Render backend URL (e.g., https://your-render-app.onrender.com)
-].filter(Boolean); // Filter out any undefined/null values
+].filter(Boolean); 
 
 // CORS configuration: use a single function to check origin
 const corsOptions = {
