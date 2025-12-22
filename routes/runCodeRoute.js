@@ -23,19 +23,13 @@ router.post("/run-code", (req, res) => {
   const filename = `${id}.${fileExtension}`;
   const filePath = path.join(__dirname, "../temp", filename);
 
-  // ✅ Create temp folder if not exist
+  //  Create temp folder if not exist
   const tempFolder = path.join(__dirname, "../temp");
   if (!fs.existsSync(tempFolder)) {
     fs.mkdirSync(tempFolder);
   }
 
-  // 🧠 Add input handling logic
-  const inputCode =
-    language === "javascript"
-      ? `${code}\nconsole.log(main(${input}));`
-      : `${code}\nprint(main(${input}))`;
-
-  fs.writeFileSync(filePath, inputCode);
+  fs.writeFileSync(filePath, code);
 
   const command =
     language === "javascript"
@@ -45,7 +39,7 @@ router.post("/run-code", (req, res) => {
   const startTime = Date.now();
 
   exec(command, (error, stdout, stderr) => {
-    fs.unlinkSync(filePath); // ✅ Always delete temp file after execution
+    fs.unlinkSync(filePath); //  Always delete temp file after execution
     const endTime = Date.now();
     const executionTime = `${endTime - startTime}ms`;
 

@@ -25,4 +25,9 @@ router.post('/assignment', authMiddleware, teacherMiddleware, uploadController.c
 // @access  Private (teacher)
 router.put('/assignment/:id', authMiddleware, teacherMiddleware, uploadController.updateAssignment);
 
+// @route   POST /api/upload/profile-pic
+// @desc    Upload user profile picture
+// @access  Private
+router.post('/profile-pic', authMiddleware, upload.single('profilePic'), uploadController.uploadProfilePic);
+
 module.exports = router;

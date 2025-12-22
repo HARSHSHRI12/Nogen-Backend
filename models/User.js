@@ -1,31 +1,64 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['student', 'teacher'], required: true },
-  avatar: { type: String },
-  
-  // Student specific fields
-  grade: { type: String },
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
 
-  // Teacher specific fields
-  subjects: [{ type: String }],
-  institution: { type: String },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true,
+    lowercase: true,
+    trim: true
+  },
+
+  password: {
+    type: String,
+    required: true,
+    select: false //  SECURITY
+  },
+
+  role: {
+    type: String,
+    enum: ['student', 'teacher'],
+    default: 'student'
+  },
+
+  avatar: {
+    type: String
+  },
+
+  // Student specific
+  grade: {
+    type: String
+  },
+
+  // Teacher specific
+  subjects: [{
+    type: String
+  }],
+  institution: {
+    type: String
+  },
 
   // Progress tracking
   progress: {
     type: Map,
     of: Number,
-    default: {},
+    default: {}
   },
 
-  // Quiz History for analytics
+  // Quiz history
   quizHistory: [
     {
-      quizResultId: { type: mongoose.Schema.Types.ObjectId, ref: 'QuizResult' },
+      quizResultId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'QuizResult'
+      },
       subject: String,
       score: Number,
       totalQuestions: Number,
@@ -35,11 +68,21 @@ const UserSchema = new mongoose.Schema({
     }
   ],
 
+  // Refresh token (for rotation)
+  refreshToken: {
+    type: String,
+    select: false
+  },
+
   // Reset password
-  resetPasswordToken: { type: String },
-  resetPasswordExpire: { type: Date }
+  resetPasswordToken: {
+    type: String
+  },
+  resetPasswordExpire: {
+    type: Date
+  }
 
 }, { timestamps: true });
 
-// ✅ Safe export (no OverwriteModelError)
+//  Safe export
 module.exports = mongoose.models.User || mongoose.model('User', UserSchema);

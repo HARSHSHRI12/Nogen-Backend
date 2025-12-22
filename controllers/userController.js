@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 // GET /api/user/profile
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user._id).select('-password');
     res.status(200).json(user);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching profile' });
@@ -21,7 +21,7 @@ const updateProfile = async (req, res) => {
     }
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user._id,
       { $set: updates },
       { new: true }
     ).select('-password');
@@ -44,7 +44,7 @@ const uploadAvatar = async (req, res) => {
     }
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user._id,
       { avatar: req.file.filename },
       { new: true }
     ).select('-password');

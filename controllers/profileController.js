@@ -6,13 +6,16 @@ const User = require('../models/User');
 // @access  Private
 const getProfile = async (req, res) => {
   try {
-    const profile = await Profile.findOne({ user: req.user.id }).populate('user', ['role']);
+    console.log('📍 getProfile - req.user:', req.user?._id || 'NO USER');
+    const profile = await Profile.findOne({ user: req.user._id }).populate('user', ['role']);
     if (!profile) {
+      console.log('❌ Profile not found for user:', req.user._id);
       return res.status(404).json({ msg: 'Profile not found' });
     }
+    console.log('✅ Profile found:', profile);
     res.json(profile);
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ getProfile error:', err.message);
     res.status(500).send('Server Error');
   }
 };
@@ -39,13 +42,13 @@ const updateProfile = async (req, res) => {
   if (profilePic) profileFields.profilePic = profilePic;
 
   try {
-    let profile = await Profile.findOne({ user: req.user.id });
-    const user = await User.findById(req.user.id);
+    let profile = await Profile.findOne({ user: req.user._id });
+    const user = await User.findById(req.user._id);
 
     if (profile) {
       // Update
       profile = await Profile.findOneAndUpdate(
-        { user: req.user.id },
+        { user: req.user._id },
         { $set: profileFields },
         { new: true }
       );
@@ -54,7 +57,7 @@ const updateProfile = async (req, res) => {
 
     // Create
     profile = new Profile({
-      user: req.user.id,
+      user: req.user._id,
       role: user.role,
       ...profileFields
     });
