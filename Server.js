@@ -36,35 +36,42 @@ const authLimiter = rateLimit({
 
 // Middleware
 const allowedOrigins = [
-  "http://localhost:3000", // Always allow localhost:3000 for local development
-  process.env.CLIENT_URL, // Netlify frontend URL (e.g., https://your-netlify-app.netlify.app)
-  process.env.BACKEND_URL // Render backend URL (e.g., https://your-render-app.onrender.com)
-].filter(Boolean); // Filter out any undefined/null values
+  "http://localhost:3000",
+  "https://nogen-ai.netlify.app"
+]; // Filter out any undefined/null values
 
 // CORS configuration: use a single function to check origin
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) { // Allow server-to-server requests, Postman, etc.
-      callback(null, true);
-    } else if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Not allowed by CORS: ${origin}`));
+app.use(cors({
+  origin: (origin, callback) => {
+    // allow Postman / server-to-server
+    if (!origin) return callback(null, true);
+
+    const normalizedOrigin = origin.replace(/\/$/, "");
+
+    if (
+      normalizedOrigin === "http://localhost:3000" ||
+      normalizedOrigin.endsWith(".netlify.app")
+    ) {
+      return callback(null, true);
     }
+
+    //  NEVER throw error here
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 200
-};
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
-app.use(cors(corsOptions));
-
-// Ensure preflight requests are handled for all routes
-app.options('*', cors(corsOptions));
+// MUST for preflight
+app.options("*", cors());
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 app.use(compression());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
