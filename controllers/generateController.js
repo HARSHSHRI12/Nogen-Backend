@@ -19,6 +19,15 @@ This law is about inertia.
 [QUESTION]Can you think of another example?[/QUESTION]
 `;
 
+// List of Gemini models to try in order of preference
+const models = [
+  'gemini-2.5-flash',
+  'gemini-flash-latest',
+  'gemini-1.5-flash-latest',
+  'gemini-pro',
+  'gemini-1.5-pro-latest'
+];
+
 exports.generateNotes = async (req, res) => {
   try {
     const { query, subject, course, classLevel, yearSem } = req.body;
@@ -55,12 +64,30 @@ ${formattingInstructions}
 Make the notes clear, beginner-friendly, and complete. Avoid fluff.
 `;
 
+    let text;
+    let success = false;
+    let lastError = null;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+    for (const modelName of models) {
+      try {
+        console.log(`Attempting to generate notes with model: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        text = await response.text();
+        console.log(`Successfully generated notes with model: ${modelName}`);
+        success = true;
+        break; // Exit loop on success
+      } catch (error) {
+        console.error(`❌ Error with model ${modelName} in generateNotes:`, error.message);
+        lastError = error;
+      }
+    }
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = await response.text();
+    if (!success) {
+      // If all models failed, throw the last error to be caught by the outer catch block
+      throw lastError || new Error("All configured generative models failed.");
+    }
 
     return res.status(200).json({ success: true, data: text });
 
@@ -81,11 +108,6 @@ exports.generateTutorResponse = async (req, res) => {
     if (!subject || !topic) {
       return res.status(400).json({ error: 'Subject and topic are required' });
     }
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
-    const chat = model.startChat({
-      history: history || [],
-    });
 
     let prompt;
     const basePrompt = `You are a friendly and highly intelligent AI tutor specializing in **${subject}**. Your student is asking about **${topic}**. ${formattingInstructions}`;
@@ -109,9 +131,33 @@ exports.generateTutorResponse = async (req, res) => {
     
     const finalQuery = userQuery ? `${prompt} The student's specific question is: "${userQuery}"` : prompt;
 
-    const result = await chat.sendMessage(finalQuery);
-    const response = await result.response;
-    const text = response.text();
+    let text;
+    let success = false;
+    let lastError = null;
+
+    for (const modelName of models) {
+      try {
+        console.log(`Attempting to generate tutor response with model: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const chat = model.startChat({
+          history: history || [],
+        });
+        
+        const result = await chat.sendMessage(finalQuery);
+        const response = await result.response;
+        text = response.text();
+        console.log(`Successfully generated tutor response with model: ${modelName}`);
+        success = true;
+        break; // Exit loop on success
+      } catch (error) {
+        console.error(`❌ Error with model ${modelName} in generateTutorResponse:`, error.message);
+        lastError = error;
+      }
+    }
+
+    if (!success) {
+      throw lastError || new Error("All configured generative models failed.");
+    }
 
     res.status(200).json({ success: true, data: text });
 
