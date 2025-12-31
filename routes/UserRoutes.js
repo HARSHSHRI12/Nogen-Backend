@@ -7,17 +7,10 @@ const upload = require('../config/multer');
 // @route   GET /api/user/profile
 // @desc    Get user profile
 // @access  Private
-router.get('/profile', authMiddleware, userController.getProfile);
-
-// @route   PUT /api/user/profile
-// @desc    Update user profile
-// @access  Private
-router.put('/profile', authMiddleware, userController.updateProfile);
-
-// @route   POST /api/user/profile/avatar
-// @desc    Upload profile avatar
-// @access  Private
-router.post('/profile/avatar', authMiddleware, upload.single('avatar'), userController.uploadAvatar);
+// DEPRECATED: Handled in profileRoutes.js and uploadRoutes.js
+// router.get('/profile', authMiddleware, userController.getProfile);
+// router.put('/profile', authMiddleware, userController.updateProfile);
+// router.post('/profile/avatar', authMiddleware, upload.single('avatar'), userController.uploadAvatar);
 
 // @route   GET /api/user/notes
 // @desc    Get user generated notes (for students)
