@@ -31,7 +31,7 @@ const updateProfile = async (req, res) => {
       user: updatedUser
     });
   } catch (err) {
-    console.error('Profile update error:', err);
+    console.error('updateProfile error:', err.message);
     res.status(500).json({ message: 'Error updating profile' });
   }
 };
@@ -54,7 +54,7 @@ const uploadAvatar = async (req, res) => {
       user: updatedUser
     });
   } catch (err) {
-    console.error('Avatar upload error:', err);
+    console.error('uploadAvatar error:', err.message);
     res.status(500).json({ message: 'Error uploading avatar' });
   }
 };
@@ -65,7 +65,7 @@ const getUserNotes = async (req, res) => {
     // Replace with actual logic to fetch user's notes
     res.status(200).json({ message: 'User notes fetched successfully', notes: [] });
   } catch (err) {
-    console.error('Fetching notes error:', err);
+    console.error('getNotes error:', err.message);
     res.status(500).json({ message: 'Error fetching notes' });
   }
 };
@@ -76,8 +76,19 @@ const getTeacherClasses = async (req, res) => {
     // Replace with actual logic to fetch teacher's classes
     res.status(200).json({ message: 'Teacher classes fetched successfully', classes: [] });
   } catch (err) {
-    console.error('Fetching classes error:', err);
+    console.error('getClasses error:', err.message);
     res.status(500).json({ message: 'Error fetching classes' });
+  }
+};
+
+// GET /api/user/:userId
+const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).select('name avatar role subjects institution');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching user' });
   }
 };
 
@@ -86,5 +97,6 @@ module.exports = {
   updateProfile,
   uploadAvatar,
   getUserNotes,
-  getTeacherClasses
+  getTeacherClasses,
+  getUserById
 };

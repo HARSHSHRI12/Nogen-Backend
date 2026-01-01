@@ -32,7 +32,7 @@ const contactFormHandler = async (req, res) => {
 
     res.status(200).json({ msg: "Message sent successfully!" });
   } catch (err) {
-    console.error("Email error:", err);
+    console.error("sendContactEmail error:", err.message);
     res.status(500).json({ msg: "Failed to send message" });
   }
 };
