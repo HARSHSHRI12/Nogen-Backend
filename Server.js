@@ -77,12 +77,16 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 // Logging
 if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+  // Debug logging removed
 }
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
 app.use(globalLimiter);
+
+app.use('/api/connections', require('./routes/connectionRoutes'));
+app.use('/api/posts', require('./routes/postRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/user', require('./routes/UserRoutes'));
@@ -120,8 +124,13 @@ app.get("/health", (req, res) => {
 });
 
 //  Catch-all 404 handler
-app.get('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+app.use((req, res) => {
+  console.log(`[404 NOT FOUND] ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    message: 'Route not found',
+    requestedUrl: req.originalUrl,
+    method: req.method
+  });
 });
 
 //  Error middleware
@@ -135,7 +144,15 @@ app.use((err, req, res, next) => {
 });
 
 //  Start server
+const { initSocket } = require('./socket');
+const http = require('http');
+const server = http.createServer(app);
+const io = initSocket(server);
+
+// Make io accessible in routes if needed (optional, using exports is better)
+app.set('io', io);
+
 const PORT = process.env.PORT || 3500;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

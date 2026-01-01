@@ -88,8 +88,30 @@ const uploadProfilePic = async (req, res) => {
     res.json(profile);
 
   } catch (err) {
-    console.error('Profile pic upload error:', err);
+    console.error('uploadProfilePic error:', err.message);
     res.status(500).send('Server Error');
+  }
+};
+
+// Upload General Image (for posts, etc.)
+const uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No file uploaded.' });
+    }
+
+    // Construct the URL of the uploaded file
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+
+    res.json({
+      success: true,
+      url: imageUrl,
+      filename: req.file.filename
+    });
+
+  } catch (err) {
+    console.error('uploadImage error:', err.message);
+    res.status(500).json({ success: false, error: 'Server Error' });
   }
 };
 
@@ -99,4 +121,5 @@ module.exports = {
   createAssignment,
   updateAssignment,
   uploadProfilePic,
+  uploadImage,
 };
